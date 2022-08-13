@@ -6,7 +6,7 @@
 /*   By: olabrecq <olabrecq@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/12 10:46:38 by olabrecq          #+#    #+#             */
-/*   Updated: 2022/08/12 14:10:00 by olabrecq         ###   ########.fr       */
+/*   Updated: 2022/08/13 14:52:21 by olabrecq         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sstream>
+#include <poll.h>
 
 # define BLUE "\033[0;36m"
 # define PINK "\033[0;35m"
@@ -28,11 +29,58 @@
 # define RESET "\033[0m"
 
 
+// #define std::string string;
+
 #ifndef PORT_N
 	#define PORT_N  5000
 #endif
 
 #pragma once
+
+
+
+class Server
+{
+	private:
+		struct sockaddr_storage 	_client_addr;
+		socklen_t 					_addrlen;
+		int 						_listener;
+		int 						_new_fd;
+		char                        _buff[256];
+    	char                        _remoteIP[INET6_ADDRSTRLEN];
+		const char* 				_port;
+
+
+		
+	public:
+		Server( const char* IP, const char * port, std::string passW );
+		~Server( void );
+
+
+		void start( void );
+		int get_listener_socket( void );
+		int accept_client ( void );
+	// get sockaddr, Ipv4 or Ipv6
+
+		void del_from_pfds(struct pollfd pfds[], int i, int *fd_count);
+		void add_to_pfds(struct pollfd *pfds[], int newfd, int *fd_count, int *fd_size);
+		
+		class CreateSocketError : public std::exception
+		{
+			virtual const char* what() const throw() { return "Not able to create socket"; }
+		};
+		class BindingError : public std::exception
+		{
+			virtual const char* what() const throw() { return "Binding Failed"; }
+		};
+		
+};
+void    *get_in_addr(struct sockaddr *s);
+
+
+//? https://illumos.org/man/3SOCKET/sockaddr_storage
+
+
 
 /* NOTE
 		IPv4 struct
@@ -46,15 +94,15 @@
 		
 		IPv6 struct
 		struct sockaddr_in6 {
-               sa_family_t     sin6_family;   /* AF_INET6 */
-               in_port_t       sin6_port;     /* port number */
-               uint32_t        sin6_flowinfo; /* IPv6 flow information */
-               struct in6_addr sin6_addr;     /* IPv6 address */
-               uint32_t        sin6_scope_id; /* Scope ID (new in 2.4) */
+               sa_family_t     sin6_family;   // AF_INET6 
+               in_port_t       sin6_port;     // port number 
+               uint32_t        sin6_flowinfo; // IPv6 flow information 
+               struct in6_addr sin6_addr;     // IPv6 address 
+               uint32_t        sin6_scope_id; // Scope ID (new in 2.4) 
            };
 
            struct in6_addr {
-               unsigned char   s6_addr[16];   /* IPv6 address */
+               unsigned char   s6_addr[16];   // IPv6 address 
            };
 			https://man7.org/linux/man-pages/man7/ipv6.7.html
 			
@@ -71,30 +119,3 @@
            };
 		   https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
 */
-
-
-class Server
-{
-	private:
-		struct sockaddr_in {
-			short       sin_family; // family
-			u_short     sin_port;  //  port 
-			struct      in_addr sin_addr;  //machine address / IP address
-			char        sin_zero[8]; //  special array needs to be initialised to zero 
-		}
-		struct sockaddr_in serv = 
-		{
-			.sin_family;// = AF_INET,
-			.sin_addr.s_addr;// = INADDR_ANY,
-			.sin_port;// = htons(PORT_N)
-		};
-
-
-		
-	public:
-		Server( void );
-		Server(/* args */);
-		Server(/* args */);
-		~Server( void );
-};
-
