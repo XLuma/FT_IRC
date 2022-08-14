@@ -6,7 +6,7 @@
 /*   By: olabrecq <olabrecq@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/12 10:49:01 by olabrecq          #+#    #+#             */
-/*   Updated: 2022/08/13 14:52:25 by olabrecq         ###   ########.fr       */
+/*   Updated: 2022/08/14 14:31:02 by olabrecq         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ void Server::start( void )
 	if(_listener == -1)
 		throw CreateSocketError();
 	std::cout << GREEN << "Socket created successfully \n" << RESET;
+	accept_client();
 }
 
 int     Server::get_listener_socket(void)
@@ -100,7 +101,7 @@ int Server::accept_client( void )
     for(;;)
     {
         int poll_count = poll(pfds, fd_count, -1);
-
+		
         if (poll_count == -1)
         {
             std::cerr << "Poll Error\n";
@@ -112,6 +113,7 @@ int Server::accept_client( void )
         {
             if (pfds[i].revents & POLLIN)
             {
+				
                 if (pfds[i].fd == _listener)
                 {
                     // if listener is ready to read, handle new
@@ -129,7 +131,13 @@ int Server::accept_client( void )
                 {
                     // if not the listener, we're just a regular client 
                     int nbytes = recv(pfds[i].fd, _buff, sizeof(_buff), 0);
+					
+					//! Irssi: Not connected to server when i pass command ??
+					printf("command : %s\n", _buff);
+
+					
                     int sender_fd = pfds[i].fd;
+					
 
                     if (nbytes <= 0)
                     {
